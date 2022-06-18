@@ -7,20 +7,37 @@ import retrofit2.Response
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
+
+class Incrementor(private val target: Int) {
+    val sharedCounter: AtomicInteger = AtomicInteger(0)
+
+    fun canUpdate(): Boolean {
+        return target == sharedCounter.get()
+    }
+
+    fun increment() {
+        sharedCounter.getAndIncrement()
+    }
+}
+
+
 fun loadContributorsCallbacks(service: GitHubService, req: RequestData, updateResults: (List<User>) -> Unit) {
     service.getOrgReposCall(req.org).onResponse { responseRepos ->
         logRepos(req, responseRepos)
         val repos = responseRepos.bodyList()
         val allUsers = mutableListOf<User>()
+        val incrementor = Incrementor(repos.size)
         for (repo in repos) {
             service.getRepoContributorsCall(req.org, repo.name).onResponse { responseUsers ->
                 logUsers(repo, responseUsers)
                 val users = responseUsers.bodyList()
                 allUsers += users
+                incrementor.increment()
+                if (incrementor.canUpdate()) {
+                    updateResults(allUsers.aggregate())
+                }
             }
         }
-        // TODO: Why this code doesn't work? How to fix that?
-        updateResults(allUsers.aggregate())
     }
 }
 
