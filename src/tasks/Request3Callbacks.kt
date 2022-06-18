@@ -4,12 +4,11 @@ import contributors.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 
 class Incrementor(private val target: Int) {
-    val sharedCounter: AtomicInteger = AtomicInteger(0)
+    private val sharedCounter: AtomicInteger = AtomicInteger(0)
 
     fun canUpdate(): Boolean {
         return target == sharedCounter.get()
